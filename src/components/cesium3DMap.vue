@@ -12,6 +12,26 @@
                 <arxRender ref="ArxChild" />
             </div>
         </div>
+        <div
+            v-if="reservoirDemoVisible"
+            class="reservoir-demo-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="水库内景演示"
+            @click.self="closeReservoirDemo"
+        >
+            <div class="reservoir-demo-panel">
+                <div class="reservoir-demo-header">
+                    <div>
+                        <div class="reservoir-demo-kicker">富水水库 · 实景演示</div>
+                        <div class="reservoir-demo-title">水库内景静态图片</div>
+                    </div>
+                    <button class="reservoir-demo-close" type="button" aria-label="关闭演示" @click="closeReservoirDemo">×</button>
+                </div>
+                <img class="reservoir-demo-image" :src="reservoirDemoImage" alt="富水水库内景演示图">
+                <div class="reservoir-demo-caption">进入水库后的静态实景示意，可关闭返回三维地图视角。</div>
+            </div>
+        </div>
         <!-- <div class="config">
         <span>扩散距离</span><el-slider v-model="distance"></el-slider>
         <span>衰减因子</span><el-slider v-model="dacay"></el-slider>
@@ -36,6 +56,7 @@ import imge2 from '../assets/image2.png';
 import liudong from '../assets/liudong.png';
 import weilan from '../assets/weilan.png';
 import smoke from '../assets/smoke.png';
+import reservoirInteriorDemo from '../assets/reservoirInteriorDemo.png';
 import { MapOnlyObjVisible } from './cesuims/OnlyObjsVisible.js';
 import DynamicWallMaterialProperty from './cesuims/DynamicWallMaterialProperty.js';
 import ws_api from '@/utils/web_socket/ws_api';
@@ -54,6 +75,8 @@ export default {
         const viewer = null;
         return {
             weather: 1,
+            reservoirDemoVisible: false,
+            reservoirDemoImage: reservoirInteriorDemo,
             checkList: [1, 2, 3],
             isHide: false,
             skyObj: null, //天空对象
@@ -946,9 +969,15 @@ export default {
             window.viewer.scene.camera.flyTo({
                 destination,
                 orientation,
-                duration: 2
+                duration: 2,
+                complete: () => {
+                    this.reservoirDemoVisible = true;
+                }
             });
             this.closeAllPopu();
+        },
+        closeReservoirDemo() {
+            this.reservoirDemoVisible = false;
         },
         // 淹没分析
         floodAnalyse(val) {
@@ -1371,6 +1400,97 @@ export default {
     iframe {
         width: 100%;
         height: 100%;
+    }
+}
+
+.reservoir-demo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: rgba(1, 15, 28, 0.78);
+    backdrop-filter: blur(4px);
+}
+
+.reservoir-demo-panel {
+    width: min(920px, 92vw);
+    overflow: hidden;
+    border: 1px solid rgba(56, 225, 255, 0.9);
+    border-radius: 18px 0 18px 0;
+    background: linear-gradient(145deg, rgba(8, 35, 55, 0.98), rgba(4, 18, 31, 0.98));
+    box-shadow: 0 0 26px rgba(41, 186, 241, 0.55);
+}
+
+.reservoir-demo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid rgba(56, 225, 255, 0.35);
+}
+
+.reservoir-demo-kicker {
+    color: #4cdef9;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.reservoir-demo-title {
+    margin-top: 5px;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    text-shadow: 1px 1px 5px #002520d2;
+}
+
+.reservoir-demo-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(76, 222, 249, 0.75);
+    border-radius: 50%;
+    color: #ffffff;
+    background: rgba(5, 30, 45, 0.7);
+    font-size: 25px;
+    line-height: 28px;
+    cursor: pointer;
+}
+
+.reservoir-demo-close:hover {
+    color: #071a29;
+    background: #4cdef9;
+}
+
+.reservoir-demo-image {
+    display: block;
+    width: 100%;
+    max-height: 62vh;
+    object-fit: cover;
+}
+
+.reservoir-demo-caption {
+    padding: 12px 22px 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+}
+
+@media (max-width: 640px) {
+    .reservoir-demo-overlay {
+        padding: 14px;
+    }
+
+    .reservoir-demo-panel {
+        width: 96vw;
+    }
+
+    .reservoir-demo-title {
+        font-size: 18px;
+    }
+
+    .reservoir-demo-image {
+        max-height: 55vh;
     }
 }
 </style>
