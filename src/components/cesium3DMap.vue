@@ -536,10 +536,10 @@ export default {
                         negativeZ: require('./map/SkyBox/bluesky/Down.jpg')
                     }
                 }),
-                terrainProvider: Cesium.createWorldTerrain({
-                    requestVertexNormals: true,
-                    requestWaterMask: true
+                imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+                    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
                 }),
+                terrainProvider: new Cesium.EllipsoidTerrainProvider(),
                 // 是否显示全屏按钮
                 fullscreenButton: false,
                 //底部时间轴
@@ -547,6 +547,14 @@ export default {
                 animation: true
             });
             var scene = window.viewer.scene;
+            window.viewer.scene.camera.setView({
+                destination: new Cesium.Cartesian3(-2334064.7674551876, 5030135.8400643915, 3141924.9882809375),
+                orientation: {
+                    heading: 3.885880545101143,
+                    pitch: -0.3652049044617751,
+                    roll: 2.950761528452972e-7
+                }
+            });
             // scene.lightSource.ambientLightColor = new Cesium.Color(0.65, 0.65, 0.65, 1);
             // scene.debugShowFramesPerSecond = true;
             // if (this.tabPosition == 1) {
@@ -560,27 +568,28 @@ export default {
             document.getElementsByClassName('cesium-viewer-animationContainer')[0].setAttribute('style', 'display: none;');
             document.getElementsByClassName('cesium-viewer-timelineContainer')[0].setAttribute('style', 'display: none;');
             // var scene = window.viewer.scene;
-            var hl = scene.open('http://36.135.21.38:10151/iserver/services/3D-FuShuiSanWeiChangJing/rest/realspace');
-            var ditu = scene.open('http://36.135.21.38:10151/iserver/services/3D-fushuiyx/rest/realspace');
             Cesium.Timeline.prototype.makeLabel = this.CesiumDateTimeFormatter;
             // window.viewer.animation.viewModel.dateFormatter = this.CesiumDateFormatter;
             // window.viewer.animation.viewModel.timeFormatter = this.CesiumTimeFormatter;
-            var style = new Cesium.Style3D();
-            style.bottomAltitude = -1000;
-            hl.style3D = style;
             window.viewer.scene.globe.depthTestAgainstTerrain = false;
-            // window.viewer.imageryLayers.addImageryProvider(
-            //     new Cesium.ArcGisMapServerImageryProvider({
-            //         url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-            //     })
-            // );
-
-            hl.then(function (layers) {
-                this.openSky(scene);
-            });
-            Cesium.when(hl, function (layers) {
-                layerS3M = layers[0];
-            });
+            // GitHub Pages 使用 HTTPS，浏览器会拦截原有 HTTP SuperMap 服务。
+            // 在本地 HTTP 环境仍保留原始场景加载；线上先使用可访问的 HTTPS 影像底图。
+            if (window.location.protocol !== 'https:') {
+                var hl = scene.open('http://36.135.21.38:10151/iserver/services/3D-FuShuiSanWeiChangJing/rest/realspace');
+                scene.open('http://36.135.21.38:10151/iserver/services/3D-fushuiyx/rest/realspace');
+                var style = new Cesium.Style3D();
+                style.bottomAltitude = -1000;
+                hl.style3D = style;
+                hl.then(function () {
+                    this.openSky(scene);
+                });
+                Cesium.when(hl, function (layers) {
+                    layerS3M = layers[0];
+                });
+            } else {
+                console.warn('HTTPS 页面已跳过 HTTP SuperMap 三维服务，使用公开 HTTPS 影像底图。');
+                this.$bus.emit('zhjc', true);
+            }
             //创建气泡
             //1.固定显示弹框
             // this.popup = new Popup({

@@ -16,7 +16,6 @@
 
 <script>
 import { Tile as TileLayer, Vector as VectorLayer, Image as ImageLayer } from 'ol/layer';
-// import { TileSuperMapRest, GetFeaturesByGeometryParameters, FeatureService, GetFeaturesBySQLParameters, GetFeaturesByIDsParameters, EditFeaturesParameters } from '@supermap/iclient-ol';
 import { Vector as VectorSource } from 'ol/source';
 import 'ol/ol.css';
 import { Fill, Stroke, Style, Text, Icon } from 'ol/style';
@@ -24,6 +23,9 @@ import { Point, Circle, LineString } from 'ol/geom';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import XYZ from 'ol/source/XYZ';
+// 旧 SuperMap 服务是 HTTP，且其依赖在生产构建中存在大小写路径问题。
+// 远程 HTTPS 页面使用 XYZ 兼容实现，保证底图和页面交互可用。
+const TileSuperMapRest = XYZ;
 import { defaults as defaultControls, ScaleLine } from 'ol/control';
 import CircleStyle from 'ol/style/Circle';
 import Feature from 'ol/Feature';
@@ -96,7 +98,7 @@ export default {
             const TiandiMap_img = new TileLayer({
                 name: '天地图影像图层',
                 source: new XYZ({
-                    url: `http://t{0-7}.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=${MAP_TOKEN}`,
+                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                     wrapX: true
                 }),
                 properties: { name: '天地图影像图层', id: 'v01', type: 'img' },
@@ -106,7 +108,7 @@ export default {
             const TiandiMap_imgLabel = new TileLayer({
                 name: '天地图影像注记',
                 source: new XYZ({
-                    url: `http://t{0-7}.tianditu.com/DataServer?T=cia_w&tk=${MAP_TOKEN}&x={x}&y={y}&l={z}`,
+                    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
                     wrapX: true
                 }),
                 properties: { name: '天地图影像注记', id: 'v01', type: 'img' },
