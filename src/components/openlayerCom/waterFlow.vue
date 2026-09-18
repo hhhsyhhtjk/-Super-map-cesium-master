@@ -58,7 +58,8 @@ export default {
             stepTime: 0,
             minTime: null,
             addTime: 0,
-            overLayShow: false
+            overLayShow: false,
+            createTimer: null
         }
     },
     mounted(){
@@ -84,17 +85,30 @@ export default {
         },
         createdMap(map){
             this.overLayShow = true;
-            setTimeout(() => {
-                this.map = map;
-                this.createOverlay([114.275000000, 29.475000000])
+            this.map = map;
+            this.changePause();
+            this.percentage = 0;
+            this.flowRate = 0;
+            this.waterRess = 0;
+            this.siteObj.q = 0;
+            this.siteObj.z = 0;
+            clearTimeout(this.createTimer);
+            this.createTimer = setTimeout(() => {
+                if (!this.map || !this.overLayShow) return;
+                this.createOverlay([114.275000000, 29.475000000]);
+                this.stepTime = 5;
+                this.changePlay();
             }, 1000)
             
         },
         changePause() {
             clearInterval(window._time);
-            this.curNum = !this.curNum
+            window._time = null;
+            this.curNum = false;
         },
         changePlay(){
+            if (this.curNum) return;
+            clearInterval(window._time);
             // this.showPops = true;
             window._time = setInterval(() => {
                 
@@ -103,28 +117,17 @@ export default {
                 this.waterRess = this.waterRess + this.stepTime;
                 this.siteObj.q = this.siteObj.q + this.stepTime;
                 this.siteObj.z = this.siteObj.z + this.stepTime;
-                if(this.duration <= 100){
-                    if (this.percentage >= 100) {
-                        this.changePause();
-                        this.percentage = 0;
-                        this.flowRate = 0;
-                        this.waterRess = 0;
-                        this.siteObj.q = 0;
-                        this.siteObj.z = 0;
-                    }
-                }else{
-                    if (this.percentage > 100) {
-                        this.changePause();
-                        this.percentage = 0;
-                        this.flowRate = 0;
-                        this.waterRess = 0;
-                        this.siteObj.q = 0;
-                        this.siteObj.z = 0;
-                    }
+                if (this.percentage >= 100) {
+                    this.changePause();
+                    this.percentage = 0;
+                    this.flowRate = 0;
+                    this.waterRess = 0;
+                    this.siteObj.q = 0;
+                    this.siteObj.z = 0;
                 }
                 
             }, 1000);
-            this.curNum = !this.curNum
+            this.curNum = true
         },
         createOverlay(coord) {
             this.overlayTime = new Overlay({
@@ -143,9 +146,12 @@ export default {
             this.map.addOverlay(this.overlayTime);
         },
         rmOverlays() {
+            clearTimeout(this.createTimer);
             this.changePause();
-            clearInterval(window._time);
-            this.map.removeOverlay(this.overlayTime);
+            if (this.map && this.overlayTime) {
+                this.map.removeOverlay(this.overlayTime);
+            }
+            this.overlayTime = null;
             this.overLayShow = false;
         },
     },
