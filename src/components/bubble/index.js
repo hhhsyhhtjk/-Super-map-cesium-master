@@ -80,17 +80,17 @@
     }
     //飞入
     flyToPoint(val){
-      console.log(val)
+      const data = val.monitoItems.data;
       let point = {
-        lat:val.monitoItems.data.vlat,
-        lng:val.monitoItems.data.vlng,
-        level:val.monitoItems.data.level,//高
-        heading:val.monitoItems.data.heading,//角度旋转
-        pitch:val.monitoItems.data.pitch,//倾斜角度
-        roll:val.monitoItems.data.roll,//倾斜角度
-        x:val.monitoItems.data.x,
-        y:val.monitoItems.data.y,
-        z:val.monitoItems.data.z,
+        lat: data.lat || data.vlat,
+        lng: data.lng || data.vlng,
+        level: data.level,//高
+        heading: data.heading,//角度旋转
+        pitch: data.pitch,//倾斜角度
+        roll: data.roll,//倾斜角度
+        x: data.x,
+        y: data.y,
+        z: data.z,
       }
       this.vmInstance.$bus.emit('flyto',point)
     }

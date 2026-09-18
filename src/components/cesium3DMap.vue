@@ -248,6 +248,9 @@ export default {
         // }
         // this.createdText(textStyle)
         this.loadMap();
+        this.$bus.on('flyto', point => {
+            this.flyToMarker(point);
+        });
         this.$bus.on('skyChange', val => {
             this.skyChanges(val);
         }),
@@ -926,7 +929,26 @@ export default {
             let that = this;
             if (that.bubbles) {
                 that.bubbles.windowClose();
+                that.bubbles = null;
             }
+        },
+        flyToMarker(point) {
+            if (!window.viewer || !point) return;
+            const hasCartesian = [point.x, point.y, point.z].every(value => typeof value === 'number');
+            const destination = hasCartesian
+                ? new Cesium.Cartesian3(point.x, point.y, point.z)
+                : Cesium.Cartesian3.fromDegrees(point.lng, point.lat, 300);
+            const orientation = {
+                heading: typeof point.heading === 'number' ? Cesium.Math.toRadians(point.heading) : window.viewer.camera.heading,
+                pitch: typeof point.pitch === 'number' ? point.pitch : -0.35,
+                roll: typeof point.roll === 'number' ? point.roll : 0
+            };
+            window.viewer.scene.camera.flyTo({
+                destination,
+                orientation,
+                duration: 2
+            });
+            this.closeAllPopu();
         },
         // 淹没分析
         floodAnalyse(val) {
