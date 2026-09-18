@@ -38,6 +38,21 @@ import WaterFlow from '../components/openlayerCom/waterFlow';
 import Overlay from 'ol/Overlay';
 import { getVectorContext } from 'ol/render';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import lybj from '../static/lybj.json';
+import bjLine from '../static/bjLine.json';
+
+const remoteFallbackData = {
+    country: { data: bjLine, stroke: '#ffe66d', width: 3, fill: 'rgba(255, 230, 109, 0.08)' },
+    river: { data: lybj, stroke: '#00d9ff', width: 3, fill: 'rgba(0, 217, 255, 0.18)' },
+    river1: { data: lybj, stroke: '#48ffb5', width: 2, fill: 'rgba(72, 255, 181, 0.12)' },
+    river2: { data: lybj, stroke: '#4da6ff', width: 3, fill: 'rgba(77, 166, 255, 0.14)' },
+    river3: { data: lybj, stroke: '#c77dff', width: 2, fill: 'rgba(199, 125, 255, 0.12)' },
+    lake: { data: lybj, stroke: '#38bdf8', width: 3, fill: 'rgba(56, 189, 248, 0.22)' },
+    dike: { data: bjLine, stroke: '#ff9f43', width: 3, fill: 'rgba(255, 159, 67, 0.08)' },
+    xzhq: { data: lybj, stroke: '#ff6b9d', width: 3, fill: 'rgba(255, 107, 157, 0.15)' },
+    lyfw: { data: lybj, stroke: '#22e6a8', width: 3, fill: 'rgba(34, 230, 168, 0.08)' },
+    lyfwTransparent: { data: lybj, stroke: '#8affd5', width: 2, fill: 'rgba(138, 255, 213, 0.03)' }
+};
 let that = this;
 export default {
     name: 'map2D',
@@ -478,6 +493,23 @@ export default {
             that.popupLayer = null;
             that.map.removeOverlay(that.popupLayer);
             that.showPop = false;
+        },
+        createRemoteFallbackLayer(id) {
+            const config = remoteFallbackData[id];
+            if (!config) return null;
+            const features = new GeoJSON().readFeatures(config.data, {
+                featureProjection: 'EPSG:4326'
+            });
+            return new VectorLayer({
+                source: new VectorSource({ features, wrapX: true }),
+                zIndex: 20,
+                properties: { id, type: 'remote-fallback' },
+                visible: true,
+                style: new Style({
+                    fill: new Fill({ color: config.fill }),
+                    stroke: new Stroke({ color: config.stroke, width: config.width })
+                })
+            });
         }
     },
 
@@ -505,6 +537,13 @@ export default {
                         // 点击选中图层时
                         const selectLayer = newVal.filter(r => !allLayer.find(c => c.getProperties().id == r));
                         selectLayer.forEach(r => {
+                            if (window.location.protocol === 'https:') {
+                                const fallbackLayer = that.createRemoteFallbackLayer(r);
+                                if (fallbackLayer) {
+                                    that.map.addLayer(fallbackLayer);
+                                }
+                                return;
+                            }
                             switch (r) {
                                 case 'country': // 行政区划
                                     const bj = new TileLayer({
